@@ -8,7 +8,7 @@ const Navbar = () => {
 
       {/* Navigation / Right Section */}
       <div className="flex items-center gap-4">
-        <button className="mx-4 px-4 py-2 rounded-xl bg-primary hover:bg-blue-700 transition text-white">
+        <button className="mx-4 px-4 py-2 rounded-xl bg-primary hover:scale-105 transition-all duration-300 text-white">
           Profile
         </button>
       </div>
