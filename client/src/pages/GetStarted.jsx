@@ -18,13 +18,13 @@ const GetStarted = () => {
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-4 font-sans">
       <div className="text-center mb-10">
         <h1 className="font-bold text-6xl text-charcoal">plusONE</h1>
-        <p className="text-xl text-slate-gray mt-2">Never travel solo.</p>
+        <p className="text-xl text-slate-gray mt-2">Never Travel Solo.</p>
       </div>
 
       <div className="w-full max-w-md">
         <div className="bg-white p-8 rounded-2xl shadow-lg">
           <h2 className="text-3xl font-bold text-center text-charcoal mb-6">
-            {isSignUp ? 'Create Account' : 'Welcome Back'}
+            {isSignUp ? 'Get Started !' : 'Welcome Back !'}
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-6">
