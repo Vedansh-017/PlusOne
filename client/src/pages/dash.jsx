@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
 // import your AppContext here
-import axios from "axios";
 
 const JourneyPage = () => {
   const [activeTab, setActiveTab] = useState("bus");

@@ -10,6 +10,7 @@ import Profile from './pages/Profile'
 const App = () => {
   return (
     <div>
+      
       <Navbar />
       <Routes>
         <Route path='/' element={<GetStarted />} />
