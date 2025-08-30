@@ -1,6 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+// your context
+import axios from "axios";
 
 const JourneyPage = () => {
+  // const { backendUrl } = useContext(AppContext); // using backend url from context
+
   const [activeTab, setActiveTab] = useState("bus");
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [showConnectModal, setShowConnectModal] = useState(false);
@@ -16,10 +20,10 @@ const JourneyPage = () => {
     phone: "",
   });
 
-  const [journeys, setJourneys] = useState([ ]);
-  
+  const [journeys, setJourneys] = useState([]);
   const [matches, setMatches] = useState([]);
 
+  // handle field changes
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     setFormData({
@@ -36,16 +40,23 @@ const JourneyPage = () => {
         (from === "Pap Chowk" && to === "College") ||
         (from === "Bus Stand" && to === "College")
       ) {
-        return { route: "College ↔ Pap Chowk/Bus Stand", reason: "Same bus route group" };
+        return {
+          route: "College ↔ Pap Chowk/Bus Stand",
+          reason: "Same bus route group",
+        };
       }
     }
     if (type === "train") {
       if (
-        (from === "College" && (to === "Jalandhar City" || to === "Jalandhar Cantt")) ||
+        (from === "College" &&
+          (to === "Jalandhar City" || to === "Jalandhar Cantt")) ||
         (from === "Jalandhar City" && to === "College") ||
         (from === "Jalandhar Cantt" && to === "College")
       ) {
-        return { route: "College ↔ Jalandhar City/Cantt", reason: "Same train route group" };
+        return {
+          route: "College ↔ Jalandhar City/Cantt",
+          reason: "Same train route group",
+        };
       }
     }
     return { route: `${from}-${to}`, reason: null };
@@ -66,25 +77,47 @@ const JourneyPage = () => {
     const n2 = normalizeLocation(j2.from, j2.to, j2.type);
 
     return {
-      match: sameType && sameDate && timeDiff <= 60 && n1.route === n2.route,
-      reason: n1.route === n2.route ? (timeDiff <= 60 ? "Within 1 hour window" : null) : null,
+      match:
+        sameType && sameDate && timeDiff <= 60 && n1.route === n2.route,
+      reason:
+        n1.route === n2.route
+          ? timeDiff <= 60
+            ? "Within 1 hour window"
+            : null
+          : null,
     };
   };
 
-  // Create a journey
-  const handleCreate = (e) => {
-    e.preventDefault();
-    const newJourney = { ...formData, type: activeTab };
-    setJourneys([...journeys, newJourney]);
-    alert("Journey created successfully!");
-  };
-
-  // Find matches only
-  const handleFindMatches = (e) => {
+  // Combined handler
+  const handleSubmitJourney = async (e) => {
     e.preventDefault();
     const currentJourney = { ...formData, type: activeTab };
-    const foundMatches = journeys.filter((j) => isSameRoute(currentJourney, j).match);
-    setMatches(foundMatches);
+
+    try {
+      // send to backend (adjust endpoint as needed)
+      const formDataObj = new FormData();
+      Object.entries(currentJourney).forEach(([key, value]) => {
+        formDataObj.append(key, value);
+      });
+
+      await axios.post(`${backendUrl}/journeys`, formDataObj);
+
+      // always create journey locally too
+      setJourneys((prev) => [...prev, currentJourney]);
+
+      // Find matches excluding this user's own
+      const foundMatches = journeys.filter(
+        (j) =>
+          isSameRoute(currentJourney, j).match &&
+          j.phone !== currentJourney.phone
+      );
+      setMatches(foundMatches);
+
+      alert("Journey created successfully!");
+    } catch (error) {
+      console.error("Error creating journey:", error);
+      alert("Failed to create journey. Try again!");
+    }
   };
 
   // Handle connect button click
@@ -94,21 +127,23 @@ const JourneyPage = () => {
     setCopied(false);
   };
 
-  // Copy phone number to clipboard
+  // Copy phone number
   const copyPhoneNumber = () => {
     navigator.clipboard.writeText(selectedMatch.phone);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Different location options
+  // Locations
   const busLocations = ["College", "Pap Chowk", "Bus Stand"];
   const trainLocations = ["College", "Jalandhar City", "Jalandhar Cantt"];
   const locations = activeTab === "bus" ? busLocations : trainLocations;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center p-6">
-      <h1 className="text-4xl font-bold text-charcoal mb-6">Plan Your Journey</h1>
+      <h1 className="text-4xl font-bold text-charcoal mb-6">
+        Plan Your Journey
+      </h1>
 
       {/* Tabs */}
       <div className="flex space-x-4 mb-8">
@@ -140,7 +175,7 @@ const JourneyPage = () => {
           {activeTab === "bus" ? "Bus Journey" : "Train Journey"}
         </h2>
 
-        <form className="space-y-6">
+        <form className="space-y-6" onSubmit={handleSubmitJourney}>
           {/* From */}
           <div>
             <label className="block text-sm font-medium text-slate-gray">
@@ -199,6 +234,10 @@ const JourneyPage = () => {
                 value={formData.date}
                 onChange={handleChange}
                 required
+                min={new Date().toISOString().split("T")[0]}
+                max={new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+                  .toISOString()
+                  .split("T")[0]}
                 className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md"
               />
             </div>
@@ -212,6 +251,11 @@ const JourneyPage = () => {
                 value={formData.time}
                 onChange={handleChange}
                 required
+                min={
+                  formData.date === new Date().toISOString().split("T")[0]
+                    ? new Date().toISOString().slice(11, 16)
+                    : "00:00"
+                }
                 className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md"
               />
             </div>
@@ -228,6 +272,7 @@ const JourneyPage = () => {
               min="1"
               value={formData.people}
               onChange={handleChange}
+              required
               className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md"
             />
           </div>
@@ -256,25 +301,18 @@ const JourneyPage = () => {
               type="file"
               name="ticket"
               onChange={handleChange}
+              required
               className="mt-1 block w-full"
             />
           </div>
 
-          {/* Buttons */}
-          <div className="flex space-x-4">
-            <button
-              onClick={handleFindMatches}
-              className="w-1/2 py-3 px-4 rounded-md font-medium text-white bg-primary hover:bg-orange-600"
-            >
-              Find Matches
-            </button>
-            <button
-              onClick={handleCreate}
-              className="w-1/2 py-3 px-4 rounded-md font-medium text-white bg-primary hover:bg-orange-600"
-            >
-              Create Journey
-            </button>
-          </div>
+          {/* Submit */}
+          <button
+            type="submit"
+            className="w-full py-3 px-4 rounded-md font-medium text-white bg-primary hover:bg-orange-600"
+          >
+            Find your plusONE
+          </button>
         </form>
       </div>
 
@@ -290,12 +328,15 @@ const JourneyPage = () => {
                   className="p-4 border rounded-xl shadow-sm flex justify-between items-center"
                 >
                   <div>
-                    <p className="font-medium">{m.from} → {m.to}</p>
+                    <p className="font-medium">
+                      {m.from} → {m.to}
+                    </p>
                     <p className="text-sm text-slate-600">
-                      {m.date}, {m.time} | {m.people} {m.people > 1 ? 'people' : 'person'}
+                      {m.date}, {m.time} | {m.people}{" "}
+                      {m.people > 1 ? "people" : "person"}
                     </p>
                   </div>
-                  <button 
+                  <button
                     onClick={() => handleConnect(m)}
                     className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-orange-600"
                   >
@@ -306,7 +347,9 @@ const JourneyPage = () => {
             </ul>
           </div>
         ) : (
-          <p className="text-slate-500 text-center">No matches found yet.</p>
+          <p className="text-slate-500 text-center">
+            No matches found yet.
+          </p>
         )}
       </div>
 
@@ -315,39 +358,62 @@ const JourneyPage = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-charcoal">Connect with Traveler</h3>
-              <button 
+              <h3 className="text-xl font-bold text-charcoal">
+                Connect with Traveler
+              </h3>
+              <button
                 onClick={() => setShowConnectModal(false)}
                 className="text-slate-500 hover:text-slate-700 text-2xl"
               >
                 &times;
               </button>
             </div>
-            
+
             <div className="space-y-4">
               <div className="bg-slate-50 p-4 rounded-lg">
-                <h4 className="font-medium text-slate-700 mb-2">Journey Details</h4>
-                <p><span className="font-medium">Route:</span> {selectedMatch.from} → {selectedMatch.to}</p>
-                <p><span className="font-medium">Date & Time:</span> {selectedMatch.date}, {selectedMatch.time}</p>
-                <p><span className="font-medium">Travelers:</span> {selectedMatch.people} {selectedMatch.people > 1 ? 'people' : 'person'}</p>
+                <h4 className="font-medium text-slate-700 mb-2">
+                  Journey Details
+                </h4>
+                <p>
+                  <span className="font-medium">Route:</span>{" "}
+                  {selectedMatch.from} → {selectedMatch.to}
+                </p>
+                <p>
+                  <span className="font-medium">Date & Time:</span>{" "}
+                  {selectedMatch.date}, {selectedMatch.time}
+                </p>
+                <p>
+                  <span className="font-medium">Travelers:</span>{" "}
+                  {selectedMatch.people}{" "}
+                  {selectedMatch.people > 1 ? "people" : "person"}
+                </p>
               </div>
-              
+
               <div className="bg-slate-50 p-4 rounded-lg">
-                <h4 className="font-medium text-slate-700 mb-2">Contact Information</h4>
+                <h4 className="font-medium text-slate-700 mb-2">
+                  Contact Information
+                </h4>
                 <div className="flex items-center justify-between">
-                  <p className="text-lg font-semibold">{selectedMatch.phone}</p>
+                  <p className="text-lg font-semibold">
+                    {selectedMatch.phone}
+                  </p>
                   <button
                     onClick={copyPhoneNumber}
-                    className={`px-3 py-1 rounded-md text-sm ${copied ? 'bg-green-500 text-white' : 'bg-primary text-white hover:bg-orange-600'}`}
+                    className={`px-3 py-1 rounded-md text-sm ${
+                      copied
+                        ? "bg-green-500 text-white"
+                        : "bg-primary text-white hover:bg-orange-600"
+                    }`}
                   >
-                    {copied ? 'Copied!' : 'Copy Number'}
+                    {copied ? "Copied!" : "Copy Number"}
                   </button>
                 </div>
                 <p className="text-sm text-slate-500 mt-2">
-                  Copy the number and contact the traveler through your preferred method
+                  Copy the number and contact the traveler through your
+                  preferred method
                 </p>
               </div>
-              
+
               <div className="pt-4 flex justify-end">
                 <button
                   onClick={() => setShowConnectModal(false)}
