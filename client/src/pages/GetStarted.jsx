@@ -209,7 +209,7 @@ const GetStarted = () => {
                       type="submit"
                       className="w-full flex justify-center py-3 px-4 rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-orange-600 transition-colors"
                     >
-                      {isSignUp ? 'Create My Account' : 'Sign In'}
+                      {isSignUp ? 'Create Account' : 'Find my plusONE'}
                     </button>
                   )}
                 </div>
