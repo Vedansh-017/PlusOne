@@ -147,7 +147,7 @@ const GetStarted = () => {
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Use your @nitj.ac.in email"
+                        placeholder="Use your college Email Only"
                         className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-primary-orange focus:ring-1 focus:ring-primary-orange"
                       />
                     </div>

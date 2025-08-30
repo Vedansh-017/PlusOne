@@ -16,7 +16,7 @@ export const registerUser = async (req, res) => {
 
     // Only allow nitj.ac.in emails
     if (!email.endsWith("@nitj.ac.in")) {
-      return res.status(400).json({ message: "Only nitj.ac.in emails allowed" });
+      return res.status(400).json({ message: "Only Email Id's with college Domain are allowed" });
     }
 
     // Check if user already exists
@@ -45,7 +45,7 @@ export const registerUser = async (req, res) => {
     await transporter.sendMail({
       from: process.env.SENDER_EMAIL,
       to: email,
-      subject: "Your Reach2Gether Registration OTP",
+      subject: "Your plusONE Registration OTP",
       text: `Hello ${name}, your OTP is ${otp}. It will expire in 5 minutes.`,
     });
 

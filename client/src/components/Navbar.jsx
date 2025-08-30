@@ -5,7 +5,7 @@ const Navbar = () => {
   return (
     <div className="flex items-center justify-between px-6 py-3 bg-white text-primary shadow-lg">
       {/* Logo */}
-      <h1 onClick={()=>(navigate('/'))} className="text-2xl font-bold tracking-wide mx-2 cursor-pointer">plus <span className="text-black">ONE</span></h1>
+      <h1 onClick={()=>(navigate('/'))} className="text-2xl font-bold tracking-wide mx-2 cursor-pointer">plus<span className="text-black">ONE</span></h1>
 
       {/* Navigation / Right Section */}
       <div className="flex items-center gap-4">
